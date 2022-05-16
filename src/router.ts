@@ -1,12 +1,25 @@
 import { match } from "path-to-regexp";
+import { handleOptions } from "./cors";
 
 // A very tiny router
-export function router(
+export async function router(
   req: Request,
-  routes: { [path: string]: (req: Request, params: any) => Promise<Response> }
+  env: { KEYSTORE: KVNamespace },
+  routes: {
+    [path: string]: (
+      req: Request,
+      env: { KEYSTORE: KVNamespace },
+      params: any
+    ) => Promise<Response>;
+  }
 ) {
   const url = new URL(req.url);
   const pathname = url.pathname;
+
+  // Handle OPTIONS
+  if (req.method === "OPTIONS") {
+    return handleOptions(req);
+  }
 
   for (const route in routes) {
     const pathMatcher = match(route, {
@@ -14,7 +27,12 @@ export function router(
     });
     const matched = pathMatcher(pathname);
     if (!matched) continue;
-    return routes[route](req, matched.params);
+    const resp = await routes[route](req, env, matched.params);
+
+    // Handle CORS
+    resp.headers.set("Access-Control-Allow-Origin", url.origin);
+
+    return resp;
   }
 
   return new Response("Not Found", { status: 404 });

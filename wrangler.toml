@@ -1,7 +1,8 @@
-name = "keystore"
+name = "kv"
 main = "src/index.ts"
 compatibility_date = "2022-05-15"
+account_id = "6775f7bd3a23072dbdbb499a7f66e187"
 
 kv_namespaces = [
-  { binding = "RWTP", id = "e49423e27f014baa9593e081bb13638c" }
+  { binding = "KEYSTORE", id = "b4fef576159d4a0bbd056f31b7c26275", preview_id = "04757ed2dc0045e28298f88889cbe8ea" }
 ]

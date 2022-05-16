@@ -17,6 +17,7 @@ Please consider being a better ancestor than your ancestors.`
 // Get a new challenge
 async function challenge(
   req: Request,
+  env: { KEYSTORE: KVNamespace },
   params: { address: string }
 ): Promise<Response> {
   if (req.method !== "POST") {
@@ -26,8 +27,8 @@ async function challenge(
   const nonce = nanoid();
   const challenge = createChallenge(nonce);
 
-  await RWTP.put(CHALLENGE_PREFIX + params.address, nonce, {
-    expiration: 1000 * 60 * 60 * 24, // 1 day expiration date
+  await env.KEYSTORE.put(CHALLENGE_PREFIX + params.address, nonce, {
+    expirationTtl: 1000 * 60 * 60 * 24, // 1 day expiration date
   });
 
   return new Response(
@@ -43,7 +44,11 @@ async function challenge(
 }
 
 // Write to a key
-async function put(req: Request, params: { key: string }): Promise<Response> {
+async function put(
+  req: Request,
+  env: { KEYSTORE: KVNamespace },
+  params: { key: string }
+): Promise<Response> {
   if (req.method !== "POST") {
     return new Response("Method not allowed", { status: 405 });
   }
@@ -65,13 +70,17 @@ async function put(req: Request, params: { key: string }): Promise<Response> {
     return new Response("Value too long", { status: 413 });
   }
 
-  await RWTP.put(KEYSTORE_PREFIX + user.address + ":" + key, body);
+  await KEYSTORE.put(KEYSTORE_PREFIX + user.address + ":" + key, body);
 
   return new Response("Success", { status: 200 });
 }
 
 // Read from a key
-async function get(req: Request, params: { key: string }): Promise<Response> {
+async function get(
+  req: Request,
+  env: { KEYSTORE: KVNamespace },
+  params: { key: string }
+): Promise<Response> {
   if (req.method !== "GET") {
     return new Response("Method not allowed", { status: 405 });
   }
@@ -81,7 +90,7 @@ async function get(req: Request, params: { key: string }): Promise<Response> {
     return new Response("Unauthorized", { status: 401 });
   }
 
-  const value = await RWTP.get(
+  const value = await KEYSTORE.get(
     KEYSTORE_PREFIX + user.address + ":" + params.key
   );
 
@@ -92,17 +101,12 @@ async function get(req: Request, params: { key: string }): Promise<Response> {
  * A Keystore implemented as a cloudflare worker.
  */
 export default {
-  async fetch(req: Request): Promise<Response> {
-    const url = new URL(req.url);
-    const pathname = url.pathname;
-
-    router(req, {
+  async fetch(req: Request, env: { KEYSTORE: KVNamespace }): Promise<Response> {
+    return router(req, env, {
       "/": index,
       "/challenge/:address": challenge,
       "/put/:key": put,
       "/get/:key": get,
     });
-
-    return new Response("Hello World!");
   },
 };

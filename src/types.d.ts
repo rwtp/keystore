@@ -1,5 +1,5 @@
 export {};
 
 declare global {
-  const RWTP: KVNamespace;
+  const KEYSTORE: KVNamespace;
 }
