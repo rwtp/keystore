@@ -1,3 +1,7 @@
 name = "keystore"
 main = "src/index.ts"
 compatibility_date = "2022-05-15"
+
+kv_namespaces = [
+  { binding = "RWTP", id = "e49423e27f014baa9593e081bb13638c" }
+]

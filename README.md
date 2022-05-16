@@ -16,10 +16,10 @@ const { challenge } = await result.json();
 
 The challenge, if printed, is a human-readable string asking if the user is comfortable allowing the application to store private information. It must include a random "nonce" string unique to that challenge. For example:
 
+```
 Sign this message if you trust this application to access private
 information, such as the names, addresses, and emails of your customers.
 
-```
 URL: https://keystore.rwtp.org
 Nonce: someRandomString
 ```
@@ -48,7 +48,7 @@ const token = new Buffer(
 Writing to the key-value store
 
 ```js
-const result = await fetch("/write/someKey", {
+const result = await fetch("/put/someKey", {
   method: "POST",
   headers: {
     "Content-Type": "application/json",
@@ -63,7 +63,7 @@ const { data } = await result.json();
 Read from the key-value store
 
 ```js
-const result = await fetch("/read/someKey", {
+const result = await fetch("/get/someKey", {
   method: "GET",
   headers: {
     "Content-Type": "application/json",

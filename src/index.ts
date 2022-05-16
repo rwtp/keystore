@@ -1,3 +1,7 @@
+import { nanoid } from "nanoid";
+import { createChallenge, getUser } from "./auth";
+import { CHALLENGE_PREFIX, KEYSTORE_PREFIX } from "./kv";
+import { MAX_KEY_LENGTH, MAX_VALUE_LENGTH } from "./limits";
 import { router } from "./router";
 
 // A health check
@@ -11,30 +15,77 @@ Please consider being a better ancestor than your ancestors.`
 }
 
 // Get a new challenge
-async function challenge(req: Request, params: any): Promise<Response> {
+async function challenge(
+  req: Request,
+  params: { address: string }
+): Promise<Response> {
   if (req.method !== "POST") {
     return new Response("Method not allowed", { status: 405 });
   }
 
-  return new Response("Challenge", { status: 200 });
+  const nonce = nanoid();
+  const challenge = createChallenge(nonce);
+
+  await RWTP.put(CHALLENGE_PREFIX + params.address, nonce, {
+    expiration: 1000 * 60 * 60 * 24, // 1 day expiration date
+  });
+
+  return new Response(
+    JSON.stringify({
+      challenge,
+    }),
+    {
+      headers: {
+        "content-type": "application/json;charset=UTF-8",
+      },
+    }
+  );
 }
 
 // Write to a key
-async function put(req: Request, params: any): Promise<Response> {
+async function put(req: Request, params: { key: string }): Promise<Response> {
   if (req.method !== "POST") {
     return new Response("Method not allowed", { status: 405 });
   }
 
-  return new Response("Put", { status: 200 });
+  const user = await getUser(req);
+  if (!user) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+
+  // Limit the size of the key
+  const key = params.key;
+  if (key.length > MAX_KEY_LENGTH) {
+    return new Response("Key too long", { status: 413 });
+  }
+
+  // Limit the size of the value
+  const body = await req.text();
+  if (body.length > MAX_VALUE_LENGTH) {
+    return new Response("Value too long", { status: 413 });
+  }
+
+  await RWTP.put(KEYSTORE_PREFIX + user.address + ":" + key, body);
+
+  return new Response("Success", { status: 200 });
 }
 
 // Read from a key
-async function get(req: Request, params: any): Promise<Response> {
+async function get(req: Request, params: { key: string }): Promise<Response> {
   if (req.method !== "GET") {
     return new Response("Method not allowed", { status: 405 });
   }
 
-  return new Response("Get", { status: 200 });
+  const user = await getUser(req);
+  if (!user) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+
+  const value = await RWTP.get(
+    KEYSTORE_PREFIX + user.address + ":" + params.key
+  );
+
+  return new Response(value, { status: 200 });
 }
 
 /**
@@ -47,7 +98,7 @@ export default {
 
     router(req, {
       "/": index,
-      "/challenge/:challenge": challenge,
+      "/challenge/:address": challenge,
       "/put/:key": put,
       "/get/:key": get,
     });
