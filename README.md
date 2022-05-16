@@ -32,7 +32,7 @@ base64(address + ":" + signedChallenge); // pseudocode
 
 You can use ethers or wagmi to sign the challenge.
 
-```
+```js
 import { useSigner } from 'wagmi';
 
 // Sign the message
