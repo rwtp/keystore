@@ -12,6 +12,7 @@
     "publish": "wrangler publish"
   },
   "dependencies": {
-    "ethers": "^5.6.6"
+    "ethers": "^5.6.6",
+    "path-to-regexp": "^6.2.1"
   }
 }

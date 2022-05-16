@@ -33,7 +33,7 @@ base64(address + ":" + signedChallenge); // pseudocode
 You can use ethers or wagmi to sign the challenge.
 
 ```js
-import { useSigner } from 'wagmi';
+import { useSigner } from "wagmi";
 
 // Sign the message
 const signer = useSigner();
@@ -41,14 +41,14 @@ const signedChallenge = signer.data.signMessage(challenge);
 
 // Create a Basic auth toekn
 const token = new Buffer(
-  await signer.getAddress() + ":" + signedChallenge
-).toString('base64');
+  (await signer.getAddress()) + ":" + signedChallenge
+).toString("base64");
 ```
 
 Writing to the key-value store
 
 ```js
-const result = await fetch("/put/someKey", {
+const result = await fetch("/write/someKey", {
   method: "POST",
   headers: {
     "Content-Type": "application/json",
@@ -63,7 +63,7 @@ const { data } = await result.json();
 Read from the key-value store
 
 ```js
-const result = await fetch("/get/someKey", {
+const result = await fetch("/read/someKey", {
   method: "GET",
   headers: {
     "Content-Type": "application/json",
