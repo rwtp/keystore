@@ -4,11 +4,11 @@ compatibility_date = "2022-05-15"
 account_id = "6775f7bd3a23072dbdbb499a7f66e187"
 
 kv_namespaces = [
-  { binding = "CHALLENGES", id = "b4fef576159d4a0bbd056f31b7c26275", preview_id = "04757ed2dc0045e28298f88889cbe8ea" }
+  { binding = "challenges", id = "b4fef576159d4a0bbd056f31b7c26275", preview_id = "04757ed2dc0045e28298f88889cbe8ea" }
 ]
 
 [durable_objects]
-bindings = [{name = "LONG_TERM_STORAGE", class_name = "LongTermStorage"}]
+bindings = [{name = "storage", class_name = "LongTermStorage"}]
 
 [[migrations]]
 tag = "v1" # Should be unique for each entry
