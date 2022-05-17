@@ -15,6 +15,12 @@ export class LongTermStorage {
   }
 
   async put(key: string, value: string): Promise<void> {
+    if (await this.state.storage.get(key)) {
+      throw new Error(
+        "Refusing to overwrite key. Consider using a different key."
+      );
+    }
+
     await this.state.storage?.put(key, value);
   }
 
