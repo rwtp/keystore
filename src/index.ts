@@ -1,8 +1,9 @@
-import { nanoid } from "nanoid";
-import { createChallenge, getUser } from "./auth";
-import { CHALLENGE_PREFIX, KEYSTORE_PREFIX } from "./kv";
+import { createChallengeForAddress, getUser } from "./auth";
+import { Env } from "./env";
 import { MAX_KEY_LENGTH, MAX_VALUE_LENGTH } from "./limits";
 import { router } from "./router";
+import { storageGet, storagePut } from "./storage";
+export { LongTermStorage } from "./storage";
 
 // A health check
 async function index(req: Request, params: any): Promise<Response> {
@@ -15,11 +16,7 @@ Please consider being a better ancestor than your ancestors.`
 }
 
 // Check if you're logged in
-async function whoami(
-  req: Request,
-  env: { KEYSTORE: KVNamespace },
-  params: any
-): Promise<Response> {
+async function whoami(req: Request, env: Env, params: any): Promise<Response> {
   const user = await getUser(req, env);
 
   if (!user) {
@@ -32,19 +29,14 @@ async function whoami(
 // Get a new challenge
 async function challenge(
   req: Request,
-  env: { KEYSTORE: KVNamespace },
+  env: Env,
   params: { address: string }
 ): Promise<Response> {
   if (req.method !== "POST") {
     return new Response("Method not allowed", { status: 405 });
   }
 
-  const nonce = nanoid();
-  const challenge = createChallenge(nonce);
-
-  await env.KEYSTORE.put(CHALLENGE_PREFIX + params.address, nonce, {
-    expirationTtl: 1000 * 60 * 60 * 24, // 1 day expiration date
-  });
+  const challenge = await createChallengeForAddress(env, params.address);
 
   return new Response(challenge);
 }
@@ -52,7 +44,7 @@ async function challenge(
 // Write to a key
 async function put(
   req: Request,
-  env: { KEYSTORE: KVNamespace },
+  env: Env,
   params: { key: string }
 ): Promise<Response> {
   if (req.method !== "POST") {
@@ -76,7 +68,7 @@ async function put(
     return new Response("Value too long", { status: 413 });
   }
 
-  await env.KEYSTORE.put(KEYSTORE_PREFIX + user.address + ":" + key, body);
+  await storagePut(req, env, user.address, key, body);
 
   return new Response("Success", { status: 200 });
 }
@@ -84,30 +76,27 @@ async function put(
 // Read from a key
 async function get(
   req: Request,
-  env: { KEYSTORE: KVNamespace },
+  env: Env,
   params: { key: string }
 ): Promise<Response> {
   if (req.method !== "GET") {
     return new Response("Method not allowed", { status: 405 });
   }
-
   const user = await getUser(req, env);
   if (!user) {
     return new Response("Unauthorized", { status: 401 });
   }
 
-  const value = await env.KEYSTORE.get(
-    KEYSTORE_PREFIX + user.address + ":" + params.key
-  );
+  const result = await storageGet(req, env, user.address, params.key);
 
-  return new Response(value, { status: 200 });
+  return new Response(result, { status: 200 });
 }
 
 /**
  * A Keystore implemented as a cloudflare worker.
  */
 export default {
-  async fetch(req: Request, env: { KEYSTORE: KVNamespace }): Promise<Response> {
+  async fetch(req: Request, env: Env): Promise<Response> {
     return router(req, env, {
       "/": index,
       "/whoami": whoami,

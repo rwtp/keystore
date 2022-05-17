@@ -1,16 +1,13 @@
 import { match } from "path-to-regexp";
 import { handleOptions } from "./cors";
+import { Env } from "./env";
 
 // A very tiny router
 export async function router(
   req: Request,
-  env: { KEYSTORE: KVNamespace },
+  env: Env,
   routes: {
-    [path: string]: (
-      req: Request,
-      env: { KEYSTORE: KVNamespace },
-      params: any
-    ) => Promise<Response>;
+    [path: string]: (req: Request, env: Env, params: any) => Promise<Response>;
   }
 ) {
   const url = new URL(req.url);
