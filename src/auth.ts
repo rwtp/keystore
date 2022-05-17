@@ -32,7 +32,6 @@ export async function getUser(
     const [address, signature] = basicAuth.split(":");
 
     // If there's no nonce (it might have expired), fail.
-
     const nonce = await env.KEYSTORE.get(CHALLENGE_PREFIX + address);
     if (!nonce) {
       return false;
