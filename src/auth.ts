@@ -4,8 +4,7 @@ import { CHALLENGE_PREFIX } from "./kv";
 export function createChallenge(nonce: string) {
   // WARNING!!! If you change this information, every user will need to re-login.
   return `
-Sign this message if you trust this application to access private
-information, such as names, addresses, and emails.
+Sign this message if you trust this application to access private information, such as names, addresses, and emails.
     
 URL: https://keystore.rwtp.org
 Nonce: ${nonce}`.trim();

@@ -30,7 +30,10 @@ export async function router(
     const resp = await routes[route](req, env, matched.params);
 
     // Handle CORS
-    resp.headers.set("Access-Control-Allow-Origin", url.origin);
+    resp.headers.set(
+      "Access-Control-Allow-Origin",
+      req.headers.get("Origin") || "*"
+    );
 
     return resp;
   }
