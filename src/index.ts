@@ -20,7 +20,7 @@ async function whoami(
   env: { KEYSTORE: KVNamespace },
   params: any
 ): Promise<Response> {
-  const user = await getUser(req);
+  const user = await getUser(req, env);
 
   if (!user) {
     return new Response("Unauthorized", { status: 401 });
@@ -59,7 +59,7 @@ async function put(
     return new Response("Method not allowed", { status: 405 });
   }
 
-  const user = await getUser(req);
+  const user = await getUser(req, env);
   if (!user) {
     return new Response("Unauthorized", { status: 401 });
   }
@@ -76,7 +76,7 @@ async function put(
     return new Response("Value too long", { status: 413 });
   }
 
-  await KEYSTORE.put(KEYSTORE_PREFIX + user.address + ":" + key, body);
+  await env.KEYSTORE.put(KEYSTORE_PREFIX + user.address + ":" + key, body);
 
   return new Response("Success", { status: 200 });
 }
@@ -91,12 +91,12 @@ async function get(
     return new Response("Method not allowed", { status: 405 });
   }
 
-  const user = await getUser(req);
+  const user = await getUser(req, env);
   if (!user) {
     return new Response("Unauthorized", { status: 401 });
   }
 
-  const value = await KEYSTORE.get(
+  const value = await env.KEYSTORE.get(
     KEYSTORE_PREFIX + user.address + ":" + params.key
   );
 

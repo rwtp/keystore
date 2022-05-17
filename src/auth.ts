@@ -12,35 +12,47 @@ Nonce: ${nonce}`.trim();
 
 // Returns a user if authorized, otherwise returns false.
 export async function getUser(
-  req: Request
+  req: Request,
+  env: { KEYSTORE: KVNamespace }
 ): Promise<false | { address: string }> {
   try {
     // If there's no authorization header, fail
     const authorization = req.headers.get("Authorization");
-    if (!authorization) return false;
+    if (!authorization) {
+      return false;
+    }
 
     const [scheme, token] = authorization.split(" ");
-    if (scheme !== "Basic" || !token || token.length === 0) return false;
+    if (scheme !== "Basic" || !token || token.length === 0) {
+      return false;
+    }
 
     // Use Basic Auth atob(address + ":" + signature)
-    const basicAuth = btoa(token);
+    const basicAuth = atob(token);
     const [address, signature] = basicAuth.split(":");
 
     // If there's no nonce (it might have expired), fail.
-    const nonce = await KEYSTORE.get(CHALLENGE_PREFIX + address);
-    if (!nonce) return false;
+
+    const nonce = await env.KEYSTORE.get(CHALLENGE_PREFIX + address);
+    if (!nonce) {
+      return false;
+    }
 
     // Recreate the challenge, and compare it against the signature.
     // If they don't match, fail
     const challenge = createChallenge(nonce);
     const signer = ethers.utils.verifyMessage(challenge, signature);
-    if (!signer) return false;
-    if (signer !== address) return false;
+    if (!signer) {
+      return false;
+    }
+    if (signer !== address) {
+      return false;
+    }
 
     // Otherwise, return the signer!
     return { address: signer };
   } catch (e) {
-    console.error(e);
+    console.error("Something went wrong", e);
     return false;
   }
 }
