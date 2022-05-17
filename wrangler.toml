@@ -9,3 +9,7 @@ kv_namespaces = [
 
 [durable_objects]
 bindings = [{name = "LONG_TERM_STORAGE", class_name = "LongTermStorage"}]
+
+[[migrations]]
+tag = "v1" # Should be unique for each entry
+new_classes = ["LongTermStorage"] # Array of new classes
