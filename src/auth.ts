@@ -5,7 +5,7 @@ export function createChallenge(nonce: string) {
   // WARNING!!! If you change this information, every user will need to re-login.
   return `
 Sign this message if you trust this application to access private
-information, such as the names, addresses, and emails of your customers.
+information, such as names, addresses, and emails.
     
 URL: https://keystore.rwtp.org
 Nonce: ${nonce}`.trim();
@@ -20,12 +20,15 @@ export async function getUser(
     const authorization = req.headers.get("Authorization");
     if (!authorization) return false;
 
+    const [scheme, token] = authorization.split(" ");
+    if (scheme !== "Basic" || !token || token.length === 0) return false;
+
     // Use Basic Auth atob(address + ":" + signature)
-    const basicAuth = btoa(authorization);
+    const basicAuth = btoa(token);
     const [address, signature] = basicAuth.split(":");
 
     // If there's no nonce (it might have expired), fail.
-    const nonce = await RWTP.get(CHALLENGE_PREFIX + address);
+    const nonce = await KEYSTORE.get(CHALLENGE_PREFIX + address);
     if (!nonce) return false;
 
     // Recreate the challenge, and compare it against the signature.

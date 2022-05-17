@@ -14,6 +14,21 @@ Please consider being a better ancestor than your ancestors.`
   );
 }
 
+// Check if you're logged in
+async function whoami(
+  req: Request,
+  env: { KEYSTORE: KVNamespace },
+  params: any
+): Promise<Response> {
+  const user = await getUser(req);
+
+  if (!user) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+
+  return new Response(user.address);
+}
+
 // Get a new challenge
 async function challenge(
   req: Request,
@@ -31,16 +46,7 @@ async function challenge(
     expirationTtl: 1000 * 60 * 60 * 24, // 1 day expiration date
   });
 
-  return new Response(
-    JSON.stringify({
-      challenge,
-    }),
-    {
-      headers: {
-        "content-type": "application/json;charset=UTF-8",
-      },
-    }
-  );
+  return new Response(challenge);
 }
 
 // Write to a key
@@ -104,6 +110,7 @@ export default {
   async fetch(req: Request, env: { KEYSTORE: KVNamespace }): Promise<Response> {
     return router(req, env, {
       "/": index,
+      "/whoami": whoami,
       "/challenge/:address": challenge,
       "/put/:key": put,
       "/get/:key": get,

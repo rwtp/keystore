@@ -11,7 +11,7 @@ You can authorize the key-value store by having a user sign a message with their
 const result = fetch("/challenge/0xc05c2aaDfAdb5CdD8EE25ec67832B524003B2E37", {
   method: "POST",
 });
-const { challenge } = await result.json();
+const challenge = await result.text();
 ```
 
 The challenge, if printed, is a human-readable string asking if the user is comfortable allowing the application to store private information. It must include a random "nonce" string unique to that challenge. For example:
@@ -56,11 +56,23 @@ const result = await fetch("/put/someKey", {
   },
   body: "myArbitraryData",
 });
-
-const { data } = await result.json();
 ```
 
 Read from the key-value store
+
+```js
+const result = await fetch("/get/someKey", {
+  method: "GET",
+  headers: {
+    Authorization: "Basic " + token,
+  },
+});
+
+const data = await result.text();
+console.log(data); // "myArbitraryData"
+```
+
+Quickly checking if you're logged in.
 
 ```js
 const result = await fetch("/get/someKey", {
@@ -71,8 +83,7 @@ const result = await fetch("/get/someKey", {
   },
 });
 
-const { data } = await result.json();
-console.log(data); // "myArbitraryData"
+const isLoggedIn = result.status === 200;
 ```
 
 ## CORS
